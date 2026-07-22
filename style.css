@@ -35,9 +35,44 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    margin: 0 3px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: inherit;
+    cursor: pointer;
 }
 
 .tavago_translate_message.tavago-busy {
     opacity: 0.6;
     pointer-events: none;
+}
+
+.tavago-busy i {
+    animation: tavago-busy-spin 0.9s linear infinite, tavago-busy-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes tavago-busy-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes tavago-busy-pulse {
+    0%,
+    100% {
+        opacity: 0.45;
+    }
+
+    50% {
+        opacity: 1;
+    }
 }

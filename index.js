@@ -4,7 +4,7 @@ import { saveSettingsDebounced } from "../../../../script.js";
 const extensionName = "Tavago";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 const messageButtonClass = "tavago_translate_message";
-const tavagoIconClass = "fa-solid fa-wand-magic-sparkles";
+const tavagoIconClass = "fa-solid fa-crow";
 
 const defaultSettings = {
     targetLanguage: "Korean",
@@ -86,6 +86,7 @@ async function translateInputTextarea() {
 
     const button = $("#tavago_translate_input");
     button.prop("disabled", true);
+    button.addClass("tavago-busy");
     button.find("span").text("번역 중...");
 
     try {
@@ -98,6 +99,7 @@ async function translateInputTextarea() {
         showError(error.message || "번역 중 오류가 발생했습니다.");
     } finally {
         button.prop("disabled", false);
+        button.removeClass("tavago-busy");
         button.find("span").text("입력창 번역");
     }
 }
@@ -163,7 +165,7 @@ function addTranslateButtonToMessage(messageBlock) {
     }
 
     const button = $(`
-        <button class="${messageButtonClass} menu_button" title="Tavago로 이 메시지 번역">
+        <button class="${messageButtonClass} mes_button" title="Tavago로 이 메시지 번역">
             <i class="${tavagoIconClass}"></i>
         </button>
     `);
