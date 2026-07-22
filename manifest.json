@@ -1,0 +1,11 @@
+{
+    "display_name": "Tavago",
+    "loading_order": 100,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "Tavago",
+    "version": "0.1.0",
+    "homePage": ""
+}

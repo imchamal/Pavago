@@ -1,0 +1,32 @@
+#tavago_settings {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tavago-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+}
+
+.tavago-title i {
+    color: var(--SmartThemeQuoteColor);
+}
+
+.tavago-label {
+    font-weight: 600;
+}
+
+.tavago-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#tavago_translate_input {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
