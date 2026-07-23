@@ -53,6 +53,12 @@
     -webkit-user-select: none;
 }
 
+.tavago-parrot-icon {
+    display: block;
+    width: 1em;
+    height: 1em;
+}
+
 /* 번역 요청이 진행 중일 때의 상태입니다. */
 .tavago_translate_message.tavago-busy {
     opacity: 0.6;
