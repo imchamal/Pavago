@@ -12,7 +12,7 @@ const messageButtonClass = "tavago_translate_message";
 const activeButtonClass = "tavago-active";
 const outdatedButtonClass = "tavago-outdated";
 const errorButtonClass = "tavago-error";
-const inputIconClass = "fa-solid fa-feather-pointed";
+const tavagoIconClass = "fa-solid fa-crow";
 const longPressMs = 650;
 const autoTranslateDelayMs = 1500;
 const seenMessageIds = new Set();
@@ -311,29 +311,6 @@ function updateMessageButtonState(message, button) {
     }
 }
 
-// 메시지 버튼에 넣을 Tavago 전용 앵무새 SVG입니다.
-// fill="currentColor"를 사용해서 SillyTavern의 기존 아이콘 색상과 상태 색상을 그대로 따라갑니다.
-function getParrotIconSvg() {
-    const maskId = `tavago-parrot-mask-${Math.random().toString(36).slice(2)}`;
-
-    return `
-        <svg class="tavago-parrot-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-            <defs>
-                <mask id="${maskId}">
-                    <rect width="64" height="64" fill="white"/>
-                    <circle cx="39" cy="25" r="4" fill="black"/>
-                    <path d="M48 35c4-1 8 0 11 3-5 0-9 2-12 6-2-3-2-6 1-9Z" fill="black"/>
-                    <path d="M42 42c3-8 9-14 17-17l2 5c-8 3-13 8-16 15l-3-3Z" fill="black"/>
-                </mask>
-            </defs>
-            <g mask="url(#${maskId})">
-                <path fill="currentColor" d="M18 57c3-12 3-23-1-33-3-8-2-14 2-19 1 5 3 8 8 10-2-6 0-10 4-13 0 6 3 10 8 12 11 3 18 13 17 23-1 12-11 20-25 20H18Z"/>
-                <path fill="currentColor" d="M43 26c9-1 16 4 18 12-5-3-11-3-16 0 7 2 11 7 12 14-8 0-14-4-18-12-3-6-1-12 4-14Z"/>
-            </g>
-        </svg>
-    `;
-}
-
 // 실리태번 전송 버튼 근처에 입력창 번역 버튼을 붙입니다.
 // 설정창에 있던 버튼과 같은 id를 쓰므로 기존 translateInputTextarea()가 그대로 작동합니다.
 function addInputTranslateButtonToSendControls() {
@@ -349,7 +326,7 @@ function addInputTranslateButtonToSendControls() {
 
     const button = document.createElement("div");
     button.id = "tavago_translate_input";
-    button.className = `${inputIconClass} interactable`;
+    button.className = `${tavagoIconClass} interactable`;
     button.title = "Tavago 입력창 번역";
     button.tabIndex = 0;
     button.setAttribute("role", "button");
@@ -828,9 +805,7 @@ function addTranslateButtonToMessage(messageBlock) {
     }
 
     const button = $(`
-        <div class="${messageButtonClass} mes_button" title="Tavago로 이 메시지 번역">
-            ${getParrotIconSvg()}
-        </div>
+        <div class="${messageButtonClass} mes_button ${tavagoIconClass}" title="Tavago로 이 메시지 번역"></div>
     `);
     let longPressTimer = null;
     let longPressHandled = false;
