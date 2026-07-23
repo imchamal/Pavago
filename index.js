@@ -12,11 +12,26 @@ const messageButtonClass = "tavago_translate_message";
 const activeButtonClass = "tavago-active";
 const outdatedButtonClass = "tavago-outdated";
 const errorButtonClass = "tavago-error";
-const tavagoIconClass = "fa-solid fa-crow";
+const inputIconClass = "fa-solid fa-feather-pointed";
 const longPressMs = 650;
 const autoTranslateDelayMs = 1500;
 const seenMessageIds = new Set();
 let inputTranslationState = null;
+
+// 메시지 번역 버튼에 사용할 Tavago 전용 앵무새 SVG입니다.
+// fill="currentColor"라서 SillyTavern의 기존 아이콘 색상과 상태 색상을 그대로 따라갑니다.
+const messageIconSvg = `
+    <svg class="tavago-message-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="
+            M17 52V28.5C17 19.4 24.4 12 33.5 12H38C45.2 12 51 17.8 51 25V28.3C55.4 29.6 58.5 33.7 58.5 38.5C58.5 45.1 53.1 50.5 46.5 50.5H44.8L39 41.6V52H17Z
+            M16.5 28.8C12.5 28.5 8.7 25.7 6.5 22.1C11.1 22.1 15.4 23.4 18.1 26.5L16.5 28.8Z
+            M20.1 20.7C16 18.9 13 14.6 12.3 9.9C17.1 11.5 20.8 14.7 22.2 19.2L20.1 20.7Z
+            M45.7 30.7C49.7 30.7 53 34 53 38C53 40.9 51.3 43.4 48.8 44.6L43.1 35.9C42 34.2 43.2 30.7 45.7 30.7Z
+            M42.4 33.2L49.4 44.1H42.6C38.9 44.1 36 41.2 36 37.5C36 34.5 38.4 32.2 41.4 32.2C41.8 32.2 42.1 32.6 42.4 33.2Z
+            M39 20.5C40.4 20.5 41.5 21.6 41.5 23S40.4 25.5 39 25.5 36.5 24.4 36.5 23 37.6 20.5 39 20.5Z
+        "/>
+    </svg>
+`;
 
 // 처음 실행할 때 사용할 기본 설정입니다.
 // 이미 저장된 설정이 있으면 getSettings()에서 이 값들과 합쳐집니다.
@@ -326,7 +341,7 @@ function addInputTranslateButtonToSendControls() {
 
     const button = document.createElement("div");
     button.id = "tavago_translate_input";
-    button.className = `${tavagoIconClass} interactable`;
+    button.className = `${inputIconClass} interactable`;
     button.title = "Tavago 입력창 번역";
     button.tabIndex = 0;
     button.setAttribute("role", "button");
@@ -805,7 +820,9 @@ function addTranslateButtonToMessage(messageBlock) {
     }
 
     const button = $(`
-        <div class="${messageButtonClass} mes_button ${tavagoIconClass}" title="Tavago로 이 메시지 번역"></div>
+        <div class="${messageButtonClass} mes_button" title="Tavago로 이 메시지 번역">
+            ${messageIconSvg}
+        </div>
     `);
     let longPressTimer = null;
     let longPressHandled = false;

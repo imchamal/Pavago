@@ -53,6 +53,16 @@
     -webkit-user-select: none;
 }
 
+/* 메시지 버튼 안의 앵무새 SVG입니다.
+   크기와 색상은 주변 Font Awesome 아이콘처럼 보이도록 1em/currentColor를 사용합니다. */
+.tavago-message-icon {
+    display: block;
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+    pointer-events: none;
+}
+
 /* 번역 요청이 진행 중일 때의 상태입니다. */
 .tavago_translate_message.tavago-busy {
     opacity: 0.6;
@@ -69,8 +79,8 @@
 
 /* 번역 중일 때 새 아이콘에 적용되는 애니메이션입니다. */
 .tavago-busy i,
-#tavago_translate_input.tavago-busy,
-.tavago_translate_message.tavago-busy {
+.tavago-busy svg,
+#tavago_translate_input.tavago-busy {
     animation: tavago-busy-pulse 0.9s ease-in-out infinite;
     transform-origin: center;
 }
