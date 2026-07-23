@@ -22,8 +22,18 @@
 
 .tavago-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+    margin-top: 8px;
+}
+
+/* 설정창 2단처럼 세 항목을 한 줄에 놓는 행입니다. */
+.tavago-grid-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* 설정창 3-5단처럼 두 항목을 한 줄에 놓는 행입니다. */
+.tavago-grid-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .tavago-field {
@@ -43,7 +53,6 @@
 
 .tavago-field-first {
     margin-top: 0;
-    margin-bottom: 8px;
 }
 
 /* 설정 라벨과 버튼 영역의 기본 간격입니다. */
@@ -60,6 +69,17 @@
 .tavago-field .text_pole {
     width: 100%;
     min-width: 0;
+}
+
+/* 캐시 초기화 버튼은 아이콘과 문구가 모바일에서도 한 줄로 보이게 고정합니다. */
+.tavago-clear-cache-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
 }
 
 #tavago_translate_input {
