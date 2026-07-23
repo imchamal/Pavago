@@ -37,6 +37,10 @@
     margin-top: 8px;
 }
 
+.tavago-field-span {
+    grid-column: 1 / -1;
+}
+
 .tavago-field-first {
     margin-top: 0;
     margin-bottom: 8px;
@@ -53,10 +57,9 @@
     opacity: 0.8;
 }
 
-@media screen and (max-width: 480px) {
-    .tavago-grid {
-        grid-template-columns: 1fr;
-    }
+.tavago-field .text_pole {
+    width: 100%;
+    min-width: 0;
 }
 
 #tavago_translate_input {

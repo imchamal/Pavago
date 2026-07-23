@@ -16,10 +16,13 @@ const errorButtonClass = "tavago-error";
 const inputIconClass = "fa-solid fa-feather-pointed";
 const longPressMs = 650;
 const autoTranslateDelayMs = 1500;
+const inputEditRetranslateDelayMs = 800;
 const seenMessageIds = new Set();
 let initialChatScanDone = false;
 let translationQueue = Promise.resolve();
 let inputTranslationState = null;
+let isSettingInputProgrammatically = false;
+let inputEditRetranslateTimer = null;
 
 // 처음 실행할 때 사용할 기본 설정입니다.
 // 이미 저장된 설정이 있으면 getSettings()에서 이 값들과 합쳐집니다.
@@ -29,6 +32,7 @@ const defaultSettings = {
     autoTranslateMode: "ai",
     dualLineMode: false,
     connectionProfile: "",
+    inputEditMode: "manual",
     customPrompt: "",
     systemPrompt: [
         "You are Tavago, a precise translation engine for SillyTavern chats.",
@@ -253,8 +257,55 @@ function getValidInputTranslationState(currentText) {
 
 // 입력창 값을 바꾸고 SillyTavern이 변경을 감지하게 input 이벤트를 보냅니다.
 function setInputTextareaValue(textarea, text) {
+    isSettingInputProgrammatically = true;
     textarea.value = text;
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    queueMicrotask(() => {
+        isSettingInputProgrammatically = false;
+    });
+}
+
+// 사용자가 입력창 원문을 직접 고쳤을 때 기존 번역/전환 상태를 초기화합니다.
+// 설정이 자동 재번역이면 짧게 기다린 뒤 현재 입력값을 다시 번역합니다.
+function handleUserInputTextareaEdit() {
+    if (isSettingInputProgrammatically) {
+        return;
+    }
+
+    clearTimeout(inputEditRetranslateTimer);
+
+    if (!inputTranslationState) {
+        return;
+    }
+
+    const wasEditingOriginal = !inputTranslationState.showingTranslation;
+    inputTranslationState = null;
+    showInfo("입력 수정됨");
+
+    if (!wasEditingOriginal || getSettings().inputEditMode !== "auto") {
+        return;
+    }
+
+    inputEditRetranslateTimer = setTimeout(() => {
+        const textarea = getInputTextarea();
+
+        if (textarea instanceof HTMLTextAreaElement && textarea.value.trim()) {
+            translateInputTextarea(true);
+        }
+    }, inputEditRetranslateDelayMs);
+}
+
+// 입력창 변경 이벤트를 감시합니다.
+// Tavago가 값을 바꾼 경우는 제외하고, 사용자가 직접 수정한 경우만 처리합니다.
+function watchInputTextareaChanges() {
+    const textarea = getInputTextarea();
+
+    if (!(textarea instanceof HTMLTextAreaElement) || textarea.dataset.tavagoInputWatcher === "true") {
+        return;
+    }
+
+    textarea.dataset.tavagoInputWatcher = "true";
+    textarea.addEventListener("input", handleUserInputTextareaEdit);
 }
 
 // SillyTavern의 각 메시지 HTML에는 "mesid"라는 번호가 붙어 있습니다.
@@ -420,7 +471,7 @@ function addInputTranslateButtonToSendControls() {
     const button = document.createElement("div");
     button.id = "tavago_translate_input";
     button.className = `${inputIconClass} interactable`;
-    button.title = "Tavago 입력창 번역";
+    button.title = "짧게: 번역/전환 · 길게: 재번역";
     button.tabIndex = 0;
     button.setAttribute("role", "button");
 
@@ -476,8 +527,12 @@ function addInputTranslateButtonToSendControls() {
 // 입력 영역이 늦게 그려지는 경우를 대비해 전송 버튼 영역을 감시합니다.
 function watchInputTranslateButton() {
     addInputTranslateButtonToSendControls();
+    watchInputTextareaChanges();
 
-    const observer = new MutationObserver(addInputTranslateButtonToSendControls);
+    const observer = new MutationObserver(() => {
+        addInputTranslateButtonToSendControls();
+        watchInputTextareaChanges();
+    });
     observer.observe(document.body, { childList: true, subtree: true });
 }
 
@@ -520,16 +575,22 @@ function buildTranslationPrompt(targetLanguageCode, translationType = "message")
         promptParts.push([
             "",
             "Dual-line display rule:",
-            "For dialogue, thoughts, emphasized text, inline code-like messages, letters, or text messages, preserve the original segment and add the translation as [translation].",
+            "Apply original [translation] ONLY to text segments already wrapped in one of these delimiters: double quotes, single quotes, curly quotes, asterisks, double asterisks, or backticks.",
+            "Do NOT apply original [translation] to plain narration.",
+            "Plain narration must be translated normally, with no original text and no square brackets.",
             "Never wrap the original segment in square brackets.",
             "Never output [original][translation].",
-            "The correct format is always: original [translation].",
+            "For eligible wrapped segments, the correct format is always: original [translation].",
             "If the original segment is wrapped in quotes or markdown delimiters, put [translation] INSIDE the same wrapper so the UI styles the original and translation together.",
             "Examples:",
             "\"I don't know.\" -> \"I don't know. [모르겠어.]\"",
+            "'I should leave.' -> 'I should leave. [떠나야 해.]'",
             "*I should leave.* -> *I should leave. [떠나야 해.]*",
             "**Incoming message** -> **Incoming message [수신 메시지]**",
             "`text message` -> `text message [문자 메시지]`",
+            "She sat down. -> 그녀는 자리에 앉았다.",
+            "She sat down. \"I'm tired.\" -> 그녀는 자리에 앉았다. \"I'm tired. [피곤해.]\"",
+            "Incorrect: She sat down. [그녀는 자리에 앉았다.]",
             "Do not make the bracketed translation bold unless the original segment itself is already bold.",
         ].join("\n"));
     }
@@ -593,6 +654,7 @@ async function translateInputTextarea(forceRetranslate = false) {
     if (state && !forceRetranslate) {
         setInputTextareaValue(textarea, state.translatedText);
         state.showingTranslation = true;
+        showInfo("번역문으로 전환");
         return;
     }
 
@@ -610,6 +672,7 @@ async function translateInputTextarea(forceRetranslate = false) {
     const button = $("#tavago_translate_input");
     button.prop("disabled", true);
     button.addClass("tavago-busy");
+    showInfo(forceRetranslate ? "재번역 시작" : "번역 시작");
 
     try {
         const sourceText = state ? state.originalText : originalText;
@@ -627,7 +690,7 @@ async function translateInputTextarea(forceRetranslate = false) {
         };
 
         setInputTextareaValue(textarea, translatedText);
-        showInfo("입력창 번역이 완료되었습니다.");
+        showInfo(forceRetranslate ? "재번역 완료" : "번역 완료");
     } catch (error) {
         console.error(error);
         showError(error.message || "번역 중 오류가 발생했습니다.");
@@ -656,9 +719,11 @@ async function toggleInputTextareaTranslation() {
     if (state.showingTranslation) {
         setInputTextareaValue(textarea, state.originalText);
         state.showingTranslation = false;
+        showInfo("원문으로 전환");
     } else {
         setInputTextareaValue(textarea, state.translatedText);
         state.showingTranslation = true;
+        showInfo("번역문으로 전환");
     }
 }
 
@@ -1028,6 +1093,7 @@ function loadSettingsToUi() {
     $("#tavago_bidirectional_mode").val(settings.bidirectionalMode);
     $("#tavago_auto_translate_mode").val(settings.autoTranslateMode);
     $("#tavago_dual_line_mode").val(settings.dualLineMode ? "on" : "off");
+    $("#tavago_input_edit_mode").val(settings.inputEditMode);
     $("#tavago_custom_prompt").val(settings.customPrompt);
 }
 
@@ -1058,6 +1124,11 @@ function bindSettingsEvents() {
 
     $("#tavago_dual_line_mode").on("change", function () {
         getSettings().dualLineMode = String($(this).val() || "off") === "on";
+        saveSettingsDebounced();
+    });
+
+    $("#tavago_input_edit_mode").on("change", function () {
+        getSettings().inputEditMode = String($(this).val() || "manual");
         saveSettingsDebounced();
     });
 
